@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(learn-opengl VERSION 1.0.0 LANGUAGES C CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
