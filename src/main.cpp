@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -26,9 +27,10 @@ const char *fragmentShaderSource = "#version 330 core\n"
 
 const char *fragmentShaderSourceYellow = "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 myColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 0.2f, 1.0f);\n"
+    "   FragColor = myColor;\n"
     "}\0";
 
 int main()
@@ -214,7 +216,12 @@ int main()
         glUseProgram(shaderProgram);
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
+        // Change shader green value over time
         glUseProgram(shaderProgramYellow);
+        float timeValue = glfwGetTime();
+        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgramYellow, "myColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(GLuint)));
         /* ============================ */
     
