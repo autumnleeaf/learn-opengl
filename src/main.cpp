@@ -9,28 +9,20 @@ void processInput(GLFWwindow* window);
 // GLSL source code creates a vertex shader (can be moved to another file later)
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "out vec4 vertexColor;\n"
+    "layout (location = 1) in vec3 aColor;\n"
+    "out vec3 myColor;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
+    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   myColor = aColor;\n"
     "}\0";
 
-// GLSL source code creates an orange fragment shader
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
-    "in vec4 vertexColor;\n"
+    "in vec3 myColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vertexColor;\n"
-    "}\0";
-
-const char *fragmentShaderSourceYellow = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "uniform vec4 myColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = myColor;\n"
+    "   FragColor = vec4(myColor, 1.0);\n"
     "}\0";
 
 int main()
@@ -106,21 +98,6 @@ int main()
         return -1;
     }
 
-    unsigned int fragmentShaderYellow;
-    fragmentShaderYellow = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShaderYellow, 1, &fragmentShaderSourceYellow, NULL);
-    glCompileShader(fragmentShaderYellow);
-
-    // Validate compilation
-    glGetShaderiv(fragmentShaderYellow, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShaderYellow, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
     // Create shader program to link shaders
     unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
@@ -140,61 +117,34 @@ int main()
         return -1;
     }
 
-    // Create shader program to link shaders
-    unsigned int shaderProgramYellow;
-    shaderProgramYellow = glCreateProgram();
-
-    // Attach shaders to program
-    glAttachShader(shaderProgramYellow, vertexShader);
-    glAttachShader(shaderProgramYellow, fragmentShaderYellow);
-    glLinkProgram(shaderProgramYellow);
-
-    // Validate program link
-    glGetProgramiv(shaderProgramYellow, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgramYellow, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-        // Tell OpenGL to use our program and get rid of shaders
+    // Tell OpenGL to use our program and get rid of shaders
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    glDeleteShader(fragmentShaderYellow);
 
     // Draw points for a triangle
     float vertices[] = {
-        0.5f,  0.5f, 0.0f,  // top right
-        0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f // top left
-    };
-
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
+        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
     };
 
     // Create a vertex buffer and vertex array
-    unsigned int VBO, VAO, EBO;
+    unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
     glBindVertexArray(VAO);
 
     // Copy vertices to vertex buffer
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Copy index array to element buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     // Set vertex attribute pointers
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    // Populate location 1 with the color data
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Unbind the buffer and array while not in use
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -203,7 +153,7 @@ int main()
     // Render loop
     while(!glfwWindowShouldClose(window))
     {
-        // Check inputs
+        // Check inputs this
         processInput(window);
 
         /* Rendering: */
@@ -211,18 +161,10 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw a rectangle using the shaders we built
-        glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-
         // Change shader green value over time
-        glUseProgram(shaderProgramYellow);
-        float timeValue = glfwGetTime();
-        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgramYellow, "myColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(GLuint)));
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         /* ============================ */
     
         // Check and call events and swap buffers
