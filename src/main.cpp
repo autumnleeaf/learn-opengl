@@ -3,27 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "shader.hpp"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-
-// GLSL source code creates a vertex shader (can be moved to another file later)
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 myColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
-    "   myColor = aColor;\n"
-    "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 myColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(myColor, 1.0);\n"
-    "}\0";
 
 int main()
 {
@@ -65,61 +48,7 @@ int main()
      *      4. Creates a vertex buffer object to store our vertex data
     */
     // Create our vertex shader
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Validate shader compilation
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    // Create fragment shader exactly like the vertex shader
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Validate compilation
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    // Create shader program to link shaders
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-
-    // Attach shaders to program
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // Validate program link
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    // Tell OpenGL to use our program and get rid of shaders
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader shader = Shader("../shaders/vertex.glsl", "../shaders/fragment.glsl");
 
     // Draw points for a triangle
     float vertices[] = {
@@ -162,7 +91,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Change shader green value over time
-        glUseProgram(shaderProgram);
+        shader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         /* ============================ */
