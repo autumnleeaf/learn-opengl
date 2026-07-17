@@ -2,6 +2,7 @@
 #include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "shader.hpp"
 #include "stb_implementation.hpp"

@@ -23,6 +23,14 @@ add_subdirectory("${GLFW_DIR}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 
+# --------------------- IMPORT GLM --------------------- #
+set(GLM_DIR "${LIB_DIR}/glm")
+target_include_directories(${PROJECT_NAME} PRIVATE "${GLM_DIR}/glm")
+
+# --------------------- IMPORT STB --------------------- #
+set(STB_DIR "${LIB_DIR}/stb")
+target_include_directories(${PROJECT_NAME} PRIVATE "${STB_DIR}")
+
 # -------------------- CHECK PLATFORM -------------------- #
 if (APPLE)
     message(STATUS "Platform is Apple")
