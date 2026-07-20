@@ -206,8 +206,14 @@ int main()
         /* Coordinate system translations
         */
         // View matrix (get coordinates from the camera perspective)
+        const float radius = 10.0f;
+        float camX = sin(glfwGetTime()) * radius;
+        float camZ = cos(glfwGetTime()) * radius;
         glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::lookAt(glm::vec3(camX, 0.0f, camZ),
+                        glm::vec3(0.0f, 0.0f, 0.0f),
+                            glm::vec3(0.0f, 1.0f, 0.0f));
 
         // Projection matrix (add perspective and clip out of bounds objects)
         glm::mat4 projection;
