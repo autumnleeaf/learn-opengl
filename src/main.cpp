@@ -11,6 +11,7 @@
 #include "stb_implementation.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
 
 // Camera vectors
@@ -21,6 +22,12 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 // Time deltas
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// Mouse camera angles
+float yaw = -90.0f;
+float pitch = 0.0f;
+float lastX = 400, lastY = 300;
+bool firstMouse = true;
 
 int main()
 {
@@ -55,6 +62,11 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
+    /*=====================================================*/
+    /* Mouse Input
+    */
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
     /*=====================================================*/
     /* Shaders
      * This section tackles a few things regarding shaders
@@ -220,11 +232,7 @@ int main()
         /* Coordinate system translations
         */
         // View matrix (get coordinates from the camera perspective)
-        const float radius = 10.0f;
-        float camX = sin(glfwGetTime()) * radius;
-        float camZ = cos(glfwGetTime()) * radius;
         glm::mat4 view = glm::mat4(1.0f);
-        // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // Projection matrix (add perspective and clip out of bounds objects)
@@ -264,12 +272,52 @@ int main()
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window)
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    // On the first frame we want to populate our lastX and lastY variables
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    // Calculate the difference in mouse position
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    // Apply a sensitivity modifier
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    // Adjust pitch and yaw
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // Constrain pitch to +/- 89 degrees
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    // Get cameraFront
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+
+}
+
+void processInput(GLFWwindow *window)
 {
     // Close the window if the escape key is pressed
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
