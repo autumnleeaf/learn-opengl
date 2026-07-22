@@ -10,9 +10,10 @@
 #include "shader.hpp"
 #include "stb_implementation.hpp"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void processInput(GLFWwindow* window);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void processInput(GLFWwindow *window);
 
 // Camera vectors
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -24,9 +25,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 // Mouse camera angles
-float yaw = -90.0f;
-float pitch = 0.0f;
-float lastX = 400, lastY = 300;
+float yaw = -90.0f, pitch = 0.0f, lastX = 400.0f, lastY = 300.0f, fov = 45.0f;
 bool firstMouse = true;
 
 int main()
@@ -60,13 +59,13 @@ int main()
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Enable depth testing
     glEnable(GL_DEPTH_TEST);
 
-    /*=====================================================*/
-    /* Mouse Input
-    */
+    // Scroll Callback
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     /*=====================================================*/
     /* Shaders
      * This section tackles a few things regarding shaders
@@ -237,7 +236,7 @@ int main()
 
         // Projection matrix (add perspective and clip out of bounds objects)
         glm::mat4 projection;
-        projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(fov), 800.0f/600.0f, 0.1f, 100.0f);
         /*=====================================================*/
         // Assign transformation models
         int viewLoc = glGetUniformLocation(shader.ID, "view");
@@ -315,6 +314,15 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(direction);
 
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f;
 }
 
 void processInput(GLFWwindow *window)
