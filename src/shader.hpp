@@ -130,6 +130,13 @@ public:
     void setVec3(const std::string &name, glm::vec3 value) {
         glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
     }
+
+    void setMaterial(const std::string &name, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess) {
+        setVec3(name + ".ambient", ambient);
+        setVec3(name + ".diffuse", diffuse);
+        setVec3(name + ".specular", specular);
+        setFloat(name + ".shininess", shininess);
+    }
 };
 
 #endif

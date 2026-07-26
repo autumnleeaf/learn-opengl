@@ -148,6 +148,12 @@ int main()  {
         shader.use();
         shader.setVec3("lightPos", lightPos);
         shader.setVec3("viewPos", camera.Position);
+        shader.setMaterial("material",
+            glm::vec3(1.0f, 0.5f, 0.31f),
+            glm::vec3(1.0f, 0.5f, 0.31f),
+            glm::vec3(0.5f, 0.5f, 0.5f),
+            32.0f
+        );
         shader.setMat4("view", camera.GetViewMatrix());
         shader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
         glm::mat4 model = glm::mat4(1.0f);
