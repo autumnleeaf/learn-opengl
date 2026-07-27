@@ -137,6 +137,13 @@ public:
         setVec3(name + ".specular", specular);
         setFloat(name + ".shininess", shininess);
     }
+
+    void setLight(const std::string &name, glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular) {
+        setVec3(name + ".position", position);
+        setVec3(name + ".ambient", ambient);
+        setVec3(name + ".diffuse", diffuse);
+        setVec3(name + ".specular", specular);
+    }
 };
 
 #endif

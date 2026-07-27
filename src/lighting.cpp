@@ -131,6 +131,18 @@ int main()  {
     shader.use();
     shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
     shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    shader.setMaterial("material",
+        glm::vec3(1.0f, 0.5f, 0.31f),
+        glm::vec3(1.0f, 0.5f, 0.31f),
+        glm::vec3(0.5f, 0.5f, 0.5f),
+        32.0f
+    );
+    shader.setLight("light",
+        lightPos,
+        glm::vec3(0.2f, 0.2f, 0.2f),
+        glm::vec3(0.5f, 0.5f, 0.5f),
+        glm::vec3(1.0f, 1.0f, 1.0f)
+    );
 
     // Render Loop
     while(!glfwWindowShouldClose(window)) {
@@ -146,14 +158,8 @@ int main()  {
         // Draw Object
         lightPos = glm::vec3(1.2 * cos(glfwGetTime()), sin(glfwGetTime()), 2 * sin(glfwGetTime()));
         shader.use();
-        shader.setVec3("lightPos", lightPos);
+        shader.setVec3("light.position", lightPos);
         shader.setVec3("viewPos", camera.Position);
-        shader.setMaterial("material",
-            glm::vec3(1.0f, 0.5f, 0.31f),
-            glm::vec3(1.0f, 0.5f, 0.31f),
-            glm::vec3(0.5f, 0.5f, 0.5f),
-            32.0f
-        );
         shader.setMat4("view", camera.GetViewMatrix());
         shader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
         glm::mat4 model = glm::mat4(1.0f);
