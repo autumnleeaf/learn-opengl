@@ -156,9 +156,16 @@ int main()  {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw Object
-        lightPos = glm::vec3(1.2 * cos(glfwGetTime()), sin(glfwGetTime()), 2 * sin(glfwGetTime()));
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
         shader.use();
-        shader.setVec3("light.position", lightPos);
+        shader.setVec3("light.ambient", ambientColor);
+        shader.setVec3("light.diffuse", diffuseColor);
         shader.setVec3("viewPos", camera.Position);
         shader.setMat4("view", camera.GetViewMatrix());
         shader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
