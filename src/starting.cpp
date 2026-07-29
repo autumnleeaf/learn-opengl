@@ -69,7 +69,7 @@ int main() {
      *      4. Creates a vertex buffer object to store our vertex data
     */
     // Create our vertex shader
-    Shader shader = Shader("../shaders/vertex.glsl", "../shaders/fragment.glsl");
+    Shader shader = Shader("../shaders/starting.vert", "../shaders/starting.frag");
 
     // Draw points for a triangle
     float vertices[] = {
