@@ -131,9 +131,9 @@ public:
         glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
     }
 
-    void setMaterial(const std::string &name, int diffuse, glm::vec3 specular, float shininess) {
+    void setMaterial(const std::string &name, int diffuse, int specular, float shininess) {
         setInt(name + ".diffuse", diffuse);
-        setVec3(name + ".specular", specular);
+        setInt(name + ".specular", specular);
         setFloat(name + ".shininess", shininess);
     }
 

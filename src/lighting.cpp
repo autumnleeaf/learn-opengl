@@ -134,11 +134,12 @@ int main()  {
 
     // Set texture for the diffuse map
     unsigned int diffuseMap = createTexture("../images/container2.png");
+    unsigned int specularMap = createTexture("../images/container2_specular.png");
 
     shader.use();
     shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
     shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    shader.setMaterial("material", 0, glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
+    shader.setMaterial("material", 0, 1, 32.0f);
     shader.setLight("light",
         lightPos,
         glm::vec3(0.2f, 0.2f, 0.2f),
@@ -160,15 +161,11 @@ int main()  {
         // Texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
         // Draw Object
-        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-
-        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-        glm::vec3 ambientColor = lightColor * glm::vec3(0.2f);
         shader.use();
-        shader.setVec3("light.ambient", ambientColor);
-        shader.setVec3("light.diffuse", diffuseColor);
         shader.setVec3("viewPos", camera.Position);
         shader.setMat4("view", camera.GetViewMatrix());
         shader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
