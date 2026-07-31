@@ -154,11 +154,12 @@ int main()  {
     shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
     shader.setMaterial("material", 0, 1, 32.0f);
     shader.setLight("light",
-        glm::vec3(-0.2f, -1.0f, -0.3f),
+        camera.Position,
+        camera.Front,
         glm::vec3(0.2f, 0.2f, 0.2f),
         glm::vec3(0.5f, 0.5f, 0.5f),
         glm::vec3(1.0f, 1.0f, 1.0f),
-        1.0f, 0.09f, 0.032f
+        1.0f, 0.09f, 0.032f, glm::cos(glm::radians(12.5f))
     );
 
     // Render Loop
@@ -183,6 +184,10 @@ int main()  {
         shader.setVec3("viewPos", camera.Position);
         shader.setMat4("view", camera.GetViewMatrix());
         shader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
+        shader.setVec3("light.position", camera.Position);
+        shader.setVec3("light.direction", camera.Front);
+        shader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+        shader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5)));
         glBindVertexArray(VAO);
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
@@ -195,15 +200,15 @@ int main()  {
         }
 
         // Draw Light Source
-        sourceShader.use();
-        sourceShader.setMat4("view", camera.GetViewMatrix());
-        sourceShader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        sourceShader.setMat4("model", model);
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // sourceShader.use();
+        // sourceShader.setMat4("view", camera.GetViewMatrix());
+        // sourceShader.setMat4("projection", glm::perspective(glm::radians(camera.Fov), 800.0f/600.0f, 0.1f, 100.0f));
+        // glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f));
+        // sourceShader.setMat4("model", model);
+        // glBindVertexArray(lightVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // glfw Event handling
         glfwSwapBuffers(window);
