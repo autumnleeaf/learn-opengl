@@ -137,7 +137,24 @@ public:
         setFloat(name + ".shininess", shininess);
     }
 
-    void setLight(const std::string &name, glm::vec3 position, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic, float cutOff) {
+    void initializeDirectionalLight(const std::string &name, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular) {
+        setVec3(name + ".direction", direction);
+        setVec3(name + ".ambient", ambient);
+        setVec3(name + ".diffuse", diffuse);
+        setVec3(name + ".specular", specular);
+    }
+
+    void initializePointLight(const std::string &name, glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic) {
+        setVec3(name + ".position", position);
+        setVec3(name + ".ambient", ambient);
+        setVec3(name + ".diffuse", diffuse);
+        setVec3(name + ".specular", specular);
+        setFloat(name + ".constant", constant);
+        setFloat(name + ".linear", linear);
+        setFloat(name + ".quadratic", quadratic);
+    }
+
+    void initializeSpotLight(const std::string &name, glm::vec3 position, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic, float cutOff, float outerCutOff) {
         setVec3(name + ".position", position);
         setVec3(name + ".direction", direction);
         setVec3(name + ".ambient", ambient);
@@ -147,6 +164,12 @@ public:
         setFloat(name + ".linear", linear);
         setFloat(name + ".quadratic", quadratic);
         setFloat(name + ".cutOff", cutOff);
+        setFloat(name + ".outerCutOff", outerCutOff);
+    }
+
+    void updateSpotLightPosition(const std::string &name, glm::vec3 position, glm::vec3 direction) {
+        setVec3(name + ".position", position);
+        setVec3(name + ".direction", direction);
     }
 };
 
