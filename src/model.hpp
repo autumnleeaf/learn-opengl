@@ -13,7 +13,7 @@
 
 class Model {
     public:
-        Model(char *path) {
+        Model(const char *path) {
             loadModel(path);
         }
 
@@ -25,9 +25,9 @@ class Model {
         }
 
     private:
+        std::vector<Texture> textures_loaded;
         std::vector<Mesh> meshes;
         std::string directory;
-        std::vector<Texture> textures_loaded;
 
         void loadModel(std::string path) {
             // Read assimp scene from file
@@ -77,11 +77,13 @@ class Model {
                 vertex.Position = position;
 
                 // Get normal data
-                glm::vec3 normal;
-                normal.x = mesh->mNormals[i].x;
-                normal.y = mesh->mNormals[i].y;
-                normal.z = mesh->mNormals[i].z;
-                vertex.Normal = normal;
+                if (mesh->HasNormals()) {
+                    glm::vec3 normal;
+                    normal.x = mesh->mNormals[i].x;
+                    normal.y = mesh->mNormals[i].y;
+                    normal.z = mesh->mNormals[i].z;
+                    vertex.Normal = normal;
+                }
 
                 // Get texture coordinates
                 if (mesh->mTextureCoords[0]) {
@@ -148,11 +150,11 @@ class Model {
             return textures;
         }
 
-        unsigned int textureFromFile(const char *source, const std::string directory) {
+        unsigned int textureFromFile(const char *source, const std::string &directory) {
             unsigned int ID;
             glGenTextures(1, &ID);
             int width, height, nrChannels;
-            unsigned char* data = stbi_load((directory + source).c_str(), &width, &height, &nrChannels, 0);
+            unsigned char* data = stbi_load((directory + '/' + source).c_str(), &width, &height, &nrChannels, 0);
             if (data) {
                 // Settings
                 glBindTexture(GL_TEXTURE_2D, ID);

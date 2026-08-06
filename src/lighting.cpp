@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
+#include "helpers.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
 #include "stb_implementation.hpp"
@@ -82,45 +83,10 @@ glm::vec3 pointLightPositions[] = {
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-float lastX = 400.0f, lastY = 300.0f, deltaTime = 0.0f, lastFrame = 0.0f;
-bool firstMouse = true;
-
-Camera camera = Camera(-90.0f, 0.0f, 45.0f);
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void mouse_callback(GLFWwindow *window, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
 unsigned int createTexture(const char *source);
 
 int main()  {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // Create a window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    // Initialize GLAD before calling any GLFW function
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    // Viewport initial size and callback functions
-    glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glEnable(GL_DEPTH_TEST);
+    GLFWwindow *window = createWindow(800, 600, "LearnOpenGL");
 
     // Shaders
     Shader shader = Shader(
@@ -186,9 +152,7 @@ int main()  {
     // Render Loop
     while(!glfwWindowShouldClose(window)) {
         // Update deltaTime
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        updateDeltaTime(glfwGetTime());
 
         // Check inputs and clar screen
         processInput(window);
@@ -237,47 +201,6 @@ int main()  {
 
     glfwTerminate();
     return 0;
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-    // On the first frame we want to populate our lastX and lastY variables
-    if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    // Calculate the difference in mouse position
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.MouseUpdate(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-    camera.ScrollUpdate(yoffset);
-}
-
-void processInput(GLFWwindow *window) {
-    // Close the window if the escape key is pressed
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    // Camera controls
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.MovementUpdate(FRONT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.MovementUpdate(BACK, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.MovementUpdate(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.MovementUpdate(RIGHT, deltaTime);
 }
 
 unsigned int createTexture(const char *source) {
