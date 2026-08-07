@@ -24,6 +24,48 @@ class Model {
             }
         }
 
+        static unsigned int textureFromFile(const char *source, const std::string &directory) {
+            unsigned int ID;
+            glGenTextures(1, &ID);
+            int width, height, nrChannels;
+            unsigned char* data = stbi_load((directory + '/' + source).c_str(), &width, &height, &nrChannels, 0);
+            if (data) {
+                // Settings
+                glBindTexture(GL_TEXTURE_2D, ID);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                // Get the color format based on the nrChannels variable
+                GLenum format;
+                switch (nrChannels) {
+                case 1:
+                    format = GL_RED;
+                    break;
+                case 3:
+                    format = GL_RGB;
+                    break;
+                case 4:
+                    format = GL_RGBA;
+                    break;
+                default:
+                    format = GL_RGB;
+                    break;
+                }
+
+                // Set texture image
+                glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                stbi_image_free(data);
+            } else {
+                std::cout << "Failed to load texture" << std::endl;
+                stbi_image_free(data);
+            }
+
+            return ID;
+        }
+
     private:
         std::vector<Texture> textures_loaded;
         std::vector<Mesh> meshes;
@@ -148,48 +190,6 @@ class Model {
 
             // Return
             return textures;
-        }
-
-        unsigned int textureFromFile(const char *source, const std::string &directory) {
-            unsigned int ID;
-            glGenTextures(1, &ID);
-            int width, height, nrChannels;
-            unsigned char* data = stbi_load((directory + '/' + source).c_str(), &width, &height, &nrChannels, 0);
-            if (data) {
-                // Settings
-                glBindTexture(GL_TEXTURE_2D, ID);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-                // Get the color format based on the nrChannels variable
-                GLenum format;
-                switch (nrChannels) {
-                case 1:
-                    format = GL_RED;
-                    break;
-                case 3:
-                    format = GL_RGB;
-                    break;
-                case 4:
-                    format = GL_RGBA;
-                    break;
-                default:
-                    format = GL_RGB;
-                    break;
-                }
-
-                // Set texture image
-                glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-                glGenerateMipmap(GL_TEXTURE_2D);
-                stbi_image_free(data);
-            } else {
-                std::cout << "Failed to load texture" << std::endl;
-                stbi_image_free(data);
-            }
-
-            return ID;
         }
 };
 

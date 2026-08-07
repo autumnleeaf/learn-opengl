@@ -87,6 +87,7 @@ unsigned int createTexture(const char *source);
 
 int main()  {
     GLFWwindow *window = createWindow(800, 600, "LearnOpenGL");
+    glEnable(GL_DEPTH_TEST);
 
     // Shaders
     Shader shader = Shader(

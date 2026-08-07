@@ -80,7 +80,6 @@ inline GLFWwindow * createWindow(unsigned int width, unsigned int height, std::s
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glEnable(GL_DEPTH_TEST);
 
     return window;
 }

@@ -9,7 +9,7 @@
 
 int main(void) {
     GLFWwindow *window = createWindow(800, 600, "LearnOpenGL");
-
+    glEnable(GL_DEPTH_TEST);
     stbi_set_flip_vertically_on_load(true);
 
     Shader shader = Shader("../shaders/lighting.vert", "../shaders/model_loading.frag");
