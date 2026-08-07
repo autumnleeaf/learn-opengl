@@ -66,7 +66,7 @@ float planeVertices[] = {
 int main() {
     GLFWwindow *window = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL");
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS);
+    glDepthFunc(GL_LESS);
 
     Shader shader = Shader("../shaders/depth_testing.vert", "../shaders/model_loading.frag");
 
@@ -104,7 +104,7 @@ int main() {
         updateDeltaTime(glfwGetTime());
         processInput(window);
         glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
         glm::mat4 model = glm::mat4(1.0f);
