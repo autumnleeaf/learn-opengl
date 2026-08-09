@@ -1,3 +1,4 @@
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 
 #include "helpers.hpp"
@@ -67,8 +68,10 @@ int main() {
     GLFWwindow *window = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL");
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
 
     Shader shader = Shader("../shaders/depth_testing.vert", "../shaders/model_loading.frag");
+    Shader shaderSingleColor = Shader("../shaders/depth_testing.vert", "../shaders/single_color.frag");
 
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -103,16 +106,38 @@ int main() {
     while(!glfwWindowShouldClose(window)) {
         updateDeltaTime(glfwGetTime());
         processInput(window);
-        glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
+        // Clear data after loop
+        glEnable(GL_DEPTH_TEST);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        // Set uniforms on both shaders
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Fov), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        shaderSingleColor.use();
+        shaderSingleColor.setMat4("view", view);
+        shaderSingleColor.setMat4("projection", projection);
+        shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
+        // Draw the plane
+        glStencilMask(0x00);
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        shader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // Stencil testing to draw everything
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+
+        // Draw cubes normally
+        shader.use();
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
@@ -124,12 +149,31 @@ int main() {
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        shader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        // Render only data that isn't filled with 1's already and disable depth testing
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
 
+        // Draw cubes slightly bigger and with only one color
+        shaderSingleColor.use();
+        glBindVertexArray(cubeVAO);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(1.1));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.1));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // Reset stencil values
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+
+        // Swap buffers and poll events
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
