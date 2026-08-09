@@ -11,7 +11,7 @@ set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/includes")
 add_executable(starting ${SRC_DIR}/starting.cpp)
 add_executable(lighting ${SRC_DIR}/lighting.cpp)
 add_executable(model_loading ${SRC_DIR}/model_loading.cpp)
-add_executable(depth_testing ${SRC_DIR}/depth_testing.cpp)
+add_executable(advanced ${SRC_DIR}/advanced.cpp)
 
 # --------------------- IMPORT GLAD --------------------- #
 set(GLAD_DIR "${LIB_DIR}/glad")
@@ -44,8 +44,8 @@ set(ASSIMP_WARNINGS_AS_ERRORS OFF)
 add_subdirectory("${ASSIMP_DIR}")
 target_include_directories(model_loading PRIVATE "${ASSIMP_DIR}/include")
 target_link_libraries(model_loading PRIVATE assimp glad glfw)
-target_include_directories(depth_testing PRIVATE "${ASSIMP_DIR}/include")
-target_link_libraries(depth_testing PRIVATE assimp glad glfw)
+target_include_directories(advanced PRIVATE "${ASSIMP_DIR}/include")
+target_link_libraries(advanced PRIVATE assimp glad glfw)
 
 # -------------------- CHECK PLATFORM -------------------- #
 if (APPLE)
