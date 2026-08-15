@@ -1,5 +1,6 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "helpers.hpp"
 #include "model.hpp"
@@ -64,13 +65,23 @@ float planeVertices[] = {
     5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
 };
 
+float vegetationVertices[] = {
+    0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+    0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+    1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+    0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+    1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+    1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+};
+
 int main() {
     GLFWwindow *window = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL");
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
 
-    Shader shader = Shader("../shaders/depth_testing.vert", "../shaders/model_loading.frag");
+    Shader shader = Shader("../shaders/depth_testing.vert", "../shaders/blending.frag");
     Shader shaderSingleColor = Shader("../shaders/depth_testing.vert", "../shaders/single_color.frag");
 
     unsigned int cubeVAO, cubeVBO;
@@ -97,11 +108,31 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
 
+    unsigned int vegetationVAO, vegetationVBO;
+    glGenVertexArrays(1, &vegetationVAO);
+    glGenBuffers(1, &vegetationVBO);
+    glBindVertexArray(vegetationVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, vegetationVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vegetationVertices), &vegetationVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
     unsigned int cubeTexture = Model::textureFromFile("metal.png", "../images");
     unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
+    unsigned int grassTexture = Model::textureFromFile("grass.png", "../images", GL_RGBA);
 
     shader.use();
-    shader.setInt("texture_diffuse1", 0);
+    shader.setInt("texture1", 0);
+
+    std::vector<glm::vec3> vegetation;
+    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
     while(!glfwWindowShouldClose(window)) {
         updateDeltaTime(glfwGetTime());
@@ -172,6 +203,16 @@ int main() {
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glEnable(GL_DEPTH_TEST);
+
+        shader.use();
+        glBindVertexArray(vegetationVAO);
+        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        for (unsigned int i = 0; i < vegetation.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
 
         // Swap buffers and poll events
         glfwSwapBuffers(window);
