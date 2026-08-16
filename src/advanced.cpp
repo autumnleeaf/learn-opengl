@@ -1,6 +1,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <vector>
+#include <map>
 
 #include "helpers.hpp"
 #include "model.hpp"
@@ -80,6 +81,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Shader shader = Shader("../shaders/depth_testing.vert", "../shaders/blending.frag");
     Shader shaderSingleColor = Shader("../shaders/depth_testing.vert", "../shaders/single_color.frag");
@@ -122,7 +125,7 @@ int main() {
 
     unsigned int cubeTexture = Model::textureFromFile("metal.png", "../images");
     unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
-    unsigned int grassTexture = Model::textureFromFile("grass.png", "../images", GL_RGBA);
+    unsigned int grassTexture = Model::textureFromFile("blending_transparent_window.png", "../images", GL_RGBA);
 
     shader.use();
     shader.setInt("texture1", 0);
@@ -204,12 +207,19 @@ int main() {
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glEnable(GL_DEPTH_TEST);
 
+        // Sort all transparent objects
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < vegetation.size(); i++) {
+            float distance = glm::length(camera.Position - vegetation[i]);
+            sorted[distance] = vegetation[i];
+        }
+
         shader.use();
         glBindVertexArray(vegetationVAO);
         glBindTexture(GL_TEXTURE_2D, grassTexture);
-        for (unsigned int i = 0; i < vegetation.size(); i++) {
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it) {
             model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
+            model = glm::translate(model, it->second);
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
