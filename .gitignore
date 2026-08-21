@@ -1,6 +1,7 @@
 build/*
 includes/*
 .vscode
+.idea
 
 # Prerequisites
 *.d
