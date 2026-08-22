@@ -66,7 +66,7 @@ static float planeVertices[] = {
     5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
 };
 
-static float vegetationVertices[] = {
+static float glassVertices[] = {
     0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
     0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
     1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
@@ -75,6 +75,11 @@ static float vegetationVertices[] = {
     1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
     1.0f,  0.5f,  0.0f,  1.0f,  0.0f
 };
+
+static void drawCube(Shader shader, glm::vec3 position, float scale);
+static void drawCube(Shader shader, glm::vec3 position);
+static void drawPlane(Shader shader, glm::vec3 position);
+static void drawShape(Shader shader, glm::vec3 position, float scale, GLsizei vertices);
 
 int main() {
     GLFWwindow *window = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL");
@@ -111,12 +116,12 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
     glBindVertexArray(0);
 
-    unsigned int vegetationVAO, vegetationVBO;
-    glGenVertexArrays(1, &vegetationVAO);
-    glGenBuffers(1, &vegetationVBO);
-    glBindVertexArray(vegetationVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, vegetationVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vegetationVertices), &vegetationVertices, GL_STATIC_DRAW);
+    unsigned int glassVAO, glassVBO;
+    glGenVertexArrays(1, &glassVAO);
+    glGenBuffers(1, &glassVBO);
+    glBindVertexArray(glassVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, glassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glassVertices), &glassVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), static_cast<void *>(nullptr));
     glEnableVertexAttribArray(1);
@@ -125,17 +130,17 @@ int main() {
 
     const unsigned int cubeTexture = Model::textureFromFile("metal.png", "../images");
     const unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
-    const unsigned int grassTexture = Model::textureFromFile("blending_transparent_window.png", "../images", GL_RGBA);
+    const unsigned int glassTexture = Model::textureFromFile("blending_transparent_window.png", "../images", GL_RGBA);
 
     shader.use();
     shader.setInt("texture1", 0);
 
-    std::vector<glm::vec3> vegetation;
-    vegetation.emplace_back(-1.5f, 0.0f, -0.48f);
-    vegetation.emplace_back(1.5f, 0.0f, 0.51f);
-    vegetation.emplace_back(0.0f, 0.0f, 0.7f);
-    vegetation.emplace_back(-0.3f, 0.0f, -2.3f);
-    vegetation.emplace_back(0.5f, 0.0f, -0.6f);
+    std::vector<glm::vec3> glass;
+    glass.emplace_back(-1.5f, 0.0f, -0.48f);
+    glass.emplace_back(1.5f, 0.0f, 0.51f);
+    glass.emplace_back(0.0f, 0.0f, 0.7f);
+    glass.emplace_back(-0.3f, 0.0f, -2.3f);
+    glass.emplace_back(0.5f, 0.0f, -0.6f);
 
     while(!glfwWindowShouldClose(window)) {
         updateDeltaTime(static_cast<float>(glfwGetTime()));
@@ -152,7 +157,6 @@ int main() {
         glCullFace(GL_FRONT);
 
         // Set uniforms on both shaders
-        auto model = glm::mat4(1.0f);
         const glm::mat4 view = camera.GetViewMatrix();
         const glm::mat4 projection = glm::perspective(glm::radians(camera.Fov), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f);
         shaderSingleColor.use();
@@ -166,9 +170,7 @@ int main() {
         glStencilMask(0x00);
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        drawPlane(shader, glm::vec3(0.0f));
 
         // Stencil testing to draw everything
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -182,13 +184,8 @@ int main() {
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        drawCube(shader, glm::vec3(-1.0f, 0.0f, -1.0f));
+        drawCube(shader, glm::vec3(2.0f, 0.0f, 0.0f));
 
         // Render only data that isn't filled with 1's already and disable depth testing
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -197,17 +194,8 @@ int main() {
 
         // Draw cubes slightly bigger and with only one color
         shaderSingleColor.use();
-        glBindVertexArray(cubeVAO);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        model = glm::scale(model, glm::vec3(1.1));
-        shaderSingleColor.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.1));
-        shaderSingleColor.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        drawCube(shaderSingleColor, glm::vec3(-1.0f, 0.0f, -1.0f), 1.1f);
+        drawCube(shaderSingleColor, glm::vec3(2.0f, 0.0f, 0.0f), 1.1f);
 
         // Reset stencil values
         glStencilMask(0xFF);
@@ -219,19 +207,16 @@ int main() {
 
         // Sort all transparent objects
         std::map<float, glm::vec3> sorted;
-        for (auto i : vegetation) {
+        for (auto i : glass) {
             float distance = glm::length(camera.Position - i);
             sorted[distance] = i;
         }
 
         shader.use();
-        glBindVertexArray(vegetationVAO);
-        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        glBindVertexArray(glassVAO);
+        glBindTexture(GL_TEXTURE_2D, glassTexture);
         for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            drawPlane(shader, it->second);
         }
 
         // Swap buffers and poll events
@@ -246,4 +231,26 @@ int main() {
 
     glfwTerminate();
     return 0;
+}
+
+void drawCube(const Shader shader, const glm::vec3 position) {
+    drawShape(shader, position, 1.0f, 36);
+}
+
+void drawCube(const Shader shader, const glm::vec3 position, const float scale) {
+    drawShape(shader, position, scale, 36);
+}
+
+static void drawPlane(const Shader shader, const glm::vec3 position) {
+    drawShape(shader, position, 1.0f, 6);
+}
+
+void drawShape(Shader shader, const glm::vec3 position, const float scale, const GLsizei vertices) {
+    auto model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    if (scale != 1.0f) {
+        model = glm::scale(model, glm::vec3(scale));
+    }
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, vertices);
 }
