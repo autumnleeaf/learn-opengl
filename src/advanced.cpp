@@ -3,9 +3,9 @@
 #include <vector>
 #include <map>
 
-#include "helpers.hpp"
-#include "model.hpp"
-#include "shader.hpp"
+#include "../headers/helpers.hpp"
+#include "../headers/model.hpp"
+#include "../headers/shader.hpp"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600

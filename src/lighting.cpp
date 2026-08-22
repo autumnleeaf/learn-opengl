@@ -11,10 +11,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
-#include "helpers.hpp"
-#include "shader.hpp"
-#include "camera.hpp"
-#include "stb_implementation.hpp"
+#include "../headers/helpers.hpp"
+#include "../headers/shader.hpp"
+#include "../headers/camera.hpp"
+#include "../headers/stb_implementation.hpp"
 
 // Draw points for a triangle
 float vertices[] = {

@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 
 #include "stb_implementation.hpp"
-#include "shader.hpp"
-#include "helpers.hpp"
-#include "model.hpp"
+#include "../headers/shader.hpp"
+#include "../headers/helpers.hpp"
+#include "../headers/model.hpp"
 
 int main(void) {
     GLFWwindow *window = createWindow(800, 600, "LearnOpenGL");

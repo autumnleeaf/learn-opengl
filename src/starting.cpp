@@ -9,9 +9,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.hpp"
-#include "camera.hpp"
-#include "stb_implementation.hpp"
+#include "../headers/shader.hpp"
+#include "../headers/camera.hpp"
+#include "../headers/stb_implementation.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
