@@ -10,13 +10,38 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     auto shader = Shader("../shaders/depth_testing.vert", "../shaders/blending.frag");
-    auto screenShader = Shader("../shaders/screen_shader.vert", "../shaders/screen_shader.frag");
+    auto screenShader = Shader("../shaders/screen_shader.vert", "../shaders/edge_detection.frag");
 
     unsigned int cubeVAO, cubeVBO;
     createBuffers(&cubeVAO, &cubeVBO, cubeVertices, sizeof(cubeVertices));
 
     unsigned int planeVAO, planeVBO;
     createBuffers(&planeVAO, &planeVBO, planeVertices, sizeof(planeVertices));
+
+    // Create a buffer for our quad, note that this is the same as a plane except 2D so we eliminate one dimension from the coordinates
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+
+    // Tell the buffer what data we will be using to render our shapes along with the size
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    // Tell the array object that the first 3 values go to index 0 and the next 2 go to index 1 when reading data
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void *>(nullptr));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+
+    const unsigned int cubeTexture = Model::textureFromFile("container.jpg", "../images");
+    const unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
+
+    shader.use();
+    shader.setInt("texture1", 0);
+
+    screenShader.use();
+    screenShader.setInt("screenTexture", 0);
 
     // Create and bind our framebuffer
     unsigned int framebuffer;
@@ -31,22 +56,14 @@ int main() {
         SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB,
         GL_UNSIGNED_BYTE, nullptr);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     // Attach it to the framebuffer object we just made (this is a color attachment to the draw and read buffers)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
         textureColorBuffer, 0);
-
-    const unsigned int cubeTexture = Model::textureFromFile("container.jpg", "../images");
-    const unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
-
-    shader.use();
-    shader.setInt("texture1", 0);
-
-    screenShader.use();
-    screenShader.setInt("screenTexture", 0);
 
     /*
      * We also want to add depth and stencil attachments, but since we will not be
@@ -71,22 +88,6 @@ int main() {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // Create a buffer for our quad, note that this is the same as a plane except 2D so we eliminate one dimension from the coordinates
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-
-    // Tell the buffer what data we will be using to render our shapes along with the size
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-    // Tell the array object that the first 3 values go to index 0 and the next 2 go to index 1 when reading data
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void *>(nullptr));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
-
     // Unbind the array to prevent accidental overwrites
     glBindVertexArray(0);
 
@@ -94,6 +95,7 @@ int main() {
         updateDeltaTime(static_cast<float>(glfwGetTime()));
         processInput(window);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -124,12 +126,12 @@ int main() {
         drawCube(shader, glm::vec3(2.0f, 0.0f, 0.0f));
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         screenShader.use();
         glBindVertexArray(quadVAO);
-        glDisable(GL_DEPTH_TEST);
         glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -139,8 +141,12 @@ int main() {
 
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteVertexArrays(1, &planeVAO);
+    glDeleteVertexArrays(1, &quadVAO);
     glDeleteBuffers(1, &cubeVBO);
     glDeleteBuffers(1, &planeVBO);
+    glDeleteBuffers(1, &quadVBO);
+    glDeleteRenderbuffers(1, &renderbuffer);
+    glDeleteFramebuffers(1, &framebuffer);
 
     glfwTerminate();
     return 0;

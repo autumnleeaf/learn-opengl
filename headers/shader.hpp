@@ -46,7 +46,7 @@ public:
             // Convert to string
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
-        } catch (std::ifstream::failure e) {
+        } catch (std::ifstream::failure &e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
         }
 
@@ -61,25 +61,25 @@ public:
 
         // Vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
+        glShaderSource(vertex, 1, &vShaderCode, nullptr);
         glCompileShader(vertex);
 
         // Validate vertex shader
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
         if (!success) {
-            glGetShaderInfoLog(vertex, 1024, NULL, infoLog);
+            glGetShaderInfoLog(vertex, 1024, nullptr, infoLog);
             std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
         }
 
         // Fragment shader
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
+        glShaderSource(fragment, 1, &fShaderCode, nullptr);
         glCompileShader(fragment);
 
         // Validate fragment shader
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
         if (!success) {
-            glGetShaderInfoLog(fragment, 1024, NULL, infoLog);
+            glGetShaderInfoLog(fragment, 1024, nullptr, infoLog);
             std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
         }
 
@@ -92,7 +92,7 @@ public:
         // Validate shader program
         glGetProgramiv(ID, GL_LINK_STATUS, &success);
         if (!success) {
-            glGetProgramInfoLog(ID, 1024, NULL, infoLog);
+            glGetProgramInfoLog(ID, 1024, nullptr, infoLog);
             std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         }
 
@@ -107,44 +107,44 @@ public:
     }
 
     // Setters
-    void setBool(const std::string &name, bool value) const {
-        glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+    void setBool(const std::string &name, const bool value) const {
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(value));
     }
     
-    void setInt(const std::string &name, int value) const {
+    void setInt(const std::string &name, const int value) const {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    void setFloat(const std::string &name, float value) const {
+    void setFloat(const std::string &name, const float value) const {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
 
-    void setMat4(const std::string &name, glm::mat4 value) {
+    void setMat4(const std::string &name, glm::mat4 value) const {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void setVec3(const std::string &name, float x, float y, float z) {
+    void setVec3(const std::string &name, const float x, const float y, const float z) const {
         glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
     }
 
-    void setVec3(const std::string &name, glm::vec3 value) {
+    void setVec3(const std::string &name, const glm::vec3 value) const {
         glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
     }
 
-    void setMaterial(const std::string &name, int diffuse, int specular, float shininess) {
+    void setMaterial(const std::string &name, int diffuse, int specular, float shininess) const {
         setInt(name + ".diffuse", diffuse);
         setInt(name + ".specular", specular);
         setFloat(name + ".shininess", shininess);
     }
 
-    void initializeDirectionalLight(const std::string &name, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular) {
+    void initializeDirectionalLight(const std::string &name, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular) const {
         setVec3(name + ".direction", direction);
         setVec3(name + ".ambient", ambient);
         setVec3(name + ".diffuse", diffuse);
         setVec3(name + ".specular", specular);
     }
 
-    void initializePointLight(const std::string &name, glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic) {
+    void initializePointLight(const std::string &name, glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic) const {
         setVec3(name + ".position", position);
         setVec3(name + ".ambient", ambient);
         setVec3(name + ".diffuse", diffuse);
@@ -154,7 +154,7 @@ public:
         setFloat(name + ".quadratic", quadratic);
     }
 
-    void initializeSpotLight(const std::string &name, glm::vec3 position, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic, float cutOff, float outerCutOff) {
+    void initializeSpotLight(const std::string &name, glm::vec3 position, glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic, float cutOff, float outerCutOff) const {
         setVec3(name + ".position", position);
         setVec3(name + ".direction", direction);
         setVec3(name + ".ambient", ambient);
@@ -167,7 +167,7 @@ public:
         setFloat(name + ".outerCutOff", outerCutOff);
     }
 
-    void updateSpotLightPosition(const std::string &name, glm::vec3 position, glm::vec3 direction) {
+    void updateSpotLightPosition(const std::string &name, glm::vec3 position, glm::vec3 direction) const {
         setVec3(name + ".position", position);
         setVec3(name + ".direction", direction);
     }
