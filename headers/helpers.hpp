@@ -143,19 +143,16 @@ inline GLFWwindow * createWindow(const int width, const int height, const std::s
         exit(-1);
     }
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Initialize GLAD before calling any GLFW function
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         exit(-1);
     }
-
-    // Viewport initial size and callback functions
-    glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return window;
 }
@@ -165,7 +162,7 @@ inline void updateDeltaTime(const float currentTime) {
     lastFrame = currentTime;
 }
 
-inline void drawShape(Shader shader, const glm::vec3 position, const float scale, const GLsizei numVertices) {
+inline void drawShape(const Shader shader, const glm::vec3 position, const float scale, const GLsizei numVertices) {
     /*
      * Every render operation can be boiled down to setting the position in the model matrix, adjusting
      * the size if needed, updating the shader being used, and calling glDrawArrays. Note that the proper
