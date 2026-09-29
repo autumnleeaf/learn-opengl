@@ -7,10 +7,56 @@
 
 #include "camera.hpp"
 #include "shader.hpp"
+#include "stb_image.h"
 
 inline float lastX = 400.0f, lastY = 300.0f, deltaTime = 0.0f, lastFrame = 0.0f;
 inline bool firstMouse = true;
 inline auto camera = Camera(-90.0f, 0.0f, 45.0f);
+
+inline float skyboxVertices[] = {
+    // positions
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+};
 
 inline float cubeVertices[] = {
     // Back face
@@ -190,7 +236,7 @@ inline void drawPlane(const Shader shader, const glm::vec3 position) {
     drawShape(shader, position, 1.0f, 6);
 }
 
-inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *vertices, const unsigned int numVertices) {
+inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *vertices, const unsigned int numVertices, const bool hasNormals = true) {
     /*
      * To create our vertex array and vertex buffer objects we need to tell the program
      * how the data is stored in the vertex arrays passed in. Luckily for us all of the planes
@@ -207,13 +253,43 @@ inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *ver
     glBufferData(GL_ARRAY_BUFFER, numVertices, vertices, GL_STATIC_DRAW);
 
     // Tell the array object that the first 3 values go to index 0 and the next 2 go to index 1 when reading data
+    const GLsizei stride = hasNormals ? 5 : 3;
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), static_cast<void *>(nullptr));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), static_cast<void *>(nullptr));
+    if (hasNormals) {
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    }
 
     // Unbind the array to prevent accidental overwrites
     glBindVertexArray(0);
+}
+
+inline unsigned int loadCubeMap(const std::vector<std::string> faces) {
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
+                width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        } else {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
 }
 
 #endif

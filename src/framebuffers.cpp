@@ -9,8 +9,12 @@ int main() {
     GLFWwindow *window = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Framebuffer Demo");
     glEnable(GL_DEPTH_TEST);
 
+    auto skyboxShader = Shader("../shaders/skybox.vert", "../shaders/skybox.frag");
     auto shader = Shader("../shaders/depth_testing.vert", "../shaders/blending.frag");
-    auto screenShader = Shader("../shaders/screen_shader.vert", "../shaders/edge_detection.frag");
+    auto screenShader = Shader("../shaders/screen_shader.vert", "../shaders/screen_shader.frag");
+
+    unsigned int skyboxVAO, skyboxVBO;
+    createBuffers(&skyboxVAO, &skyboxVBO, skyboxVertices, sizeof(skyboxVertices), false);
 
     unsigned int cubeVAO, cubeVBO;
     createBuffers(&cubeVAO, &cubeVBO, cubeVertices, sizeof(cubeVertices));
@@ -34,6 +38,15 @@ int main() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
 
+    const std::vector<std::string> faces = {
+        "../images/skybox/right.jpg",
+        "../images/skybox/left.jpg",
+        "../images/skybox/top.jpg",
+        "../images/skybox/bottom.jpg",
+        "../images/skybox/front.jpg",
+        "../images/skybox/back.jpg"
+    };
+    const unsigned int skyboxTexture = loadCubeMap(faces);
     const unsigned int cubeTexture = Model::textureFromFile("container.jpg", "../images");
     const unsigned int floorTexture = Model::textureFromFile("marble.png", "../images");
 
@@ -96,16 +109,16 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Set face culling for plane
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-
         // Set uniforms on both shaders
         shader.use();
         const glm::mat4 view = camera.GetViewMatrix();
         const glm::mat4 projection = glm::perspective(glm::radians(camera.Fov), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f);
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
+
+        // Set face culling for plane
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
 
         // Draw the plane
         glBindVertexArray(planeVAO);
@@ -121,6 +134,19 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         drawCube(shader, glm::vec3(-1.0f, 0.0f, -1.0f));
         drawCube(shader, glm::vec3(2.0f, 0.0f, 0.0f));
+
+        // Draw Skybox
+        glDepthFunc(GL_LEQUAL);
+        skyboxShader.use();
+        // We convert the view matrics to a 3d matrix and back to remove the translation part
+        skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+        skyboxShader.setMat4("projection", projection);
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
