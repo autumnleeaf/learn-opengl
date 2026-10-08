@@ -16,32 +16,20 @@ int main() {
     auto refractionShader = Shader("../shaders/reflection.vert", "../shaders/refraction.frag");
 
     unsigned int skyboxVAO, skyboxVBO;
-    createBuffers(&skyboxVAO, &skyboxVBO, skyboxVertices, sizeof(skyboxVertices), false, 3);
+    createBuffers(&skyboxVAO, &skyboxVBO, skyboxVertices, sizeof(skyboxVertices), false, false);
 
     unsigned int cubeVAO, cubeVBO;
     createBuffers(&cubeVAO, &cubeVBO, cubeVertices, sizeof(cubeVertices));
 
     unsigned int reflectVAO, reflectVBO;
-    createBuffers(&reflectVAO, &reflectVBO, cubeWithNormals, sizeof(cubeWithNormals), true, 6);
+    createBuffers(&reflectVAO, &reflectVBO, cubeWithNormals, sizeof(cubeWithNormals), true, false);
 
     unsigned int planeVAO, planeVBO;
     createBuffers(&planeVAO, &planeVBO, planeVertices, sizeof(planeVertices));
 
     // Create a buffer for our quad, note that this is the same as a plane except 2D so we eliminate one dimension from the coordinates
     unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-
-    // Tell the buffer what data we will be using to render our shapes along with the size
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-    // Tell the array object that the first 3 values go to index 0 and the next 2 go to index 1 when reading data
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void *>(nullptr));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+    createBuffers(&quadVAO, &quadVBO, quadVertices, sizeof(quadVertices), false, true, 2);
 
     const std::vector<std::string> faces = {
         "../images/skybox/right.jpg",

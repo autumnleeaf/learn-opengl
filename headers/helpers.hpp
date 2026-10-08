@@ -280,7 +280,7 @@ inline void drawPlane(const Shader shader, const glm::vec3 position) {
     drawShape(shader, position, 1.0f, 6);
 }
 
-inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *vertices, const unsigned int numVertices, const bool hasNormals  = true, const int stride = 5) {
+inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *vertices, const unsigned int numVertices, const bool hasNormals  = false, const bool hasTexCoords = true, const int coordSize = 3) {
     /*
      * To create our vertex array and vertex buffer objects we need to tell the program
      * how the data is stored in the vertex arrays passed in. Luckily for us all of the planes
@@ -293,15 +293,24 @@ inline void createBuffers(unsigned int *vao, unsigned int *vbo, const float *ver
     glBindVertexArray(*vao);
     glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 
+    auto stride = coordSize;
+    if (hasNormals) stride += 3;
+    if (hasTexCoords) stride += 2;
+
     // Tell the buffer what data we will be using to render our shapes along with the size
     glBufferData(GL_ARRAY_BUFFER, numVertices, vertices, GL_STATIC_DRAW);
 
     // Tell the array object that the first 3 values go to index 0 and the next 2 go to index 1 when reading data
+    auto index = 0;
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, static_cast<int>(stride * sizeof(float)), static_cast<void *>(nullptr));
+    glVertexAttribPointer(0, coordSize, GL_FLOAT, GL_FALSE, static_cast<int>(stride * sizeof(float)), static_cast<void *>(nullptr));
+    if (hasTexCoords) {
+        glEnableVertexAttribArray(++index);
+        glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, static_cast<int>(stride * sizeof(float)), reinterpret_cast<void *>(coordSize * sizeof(float)));
+    }
     if (hasNormals) {
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, stride - 3, GL_FLOAT, GL_FALSE, static_cast<int>(stride * sizeof(float)), reinterpret_cast<void *>(3 * sizeof(float)));
+        glEnableVertexAttribArray(++index);
+        glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, static_cast<int>(stride * sizeof(float)), reinterpret_cast<void *>((stride - 3) * sizeof(float)));
     }
 
     // Unbind the array to prevent accidental overwrites
