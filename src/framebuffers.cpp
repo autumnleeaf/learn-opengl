@@ -12,12 +12,17 @@ int main() {
     auto skyboxShader = Shader("../shaders/skybox.vert", "../shaders/skybox.frag");
     auto shader = Shader("../shaders/depth_testing.vert", "../shaders/blending.frag");
     auto screenShader = Shader("../shaders/screen_shader.vert", "../shaders/screen_shader.frag");
+    auto reflectionShader = Shader("../shaders/reflection.vert", "../shaders/reflection.frag");
+    auto refractionShader = Shader("../shaders/reflection.vert", "../shaders/refraction.frag");
 
     unsigned int skyboxVAO, skyboxVBO;
-    createBuffers(&skyboxVAO, &skyboxVBO, skyboxVertices, sizeof(skyboxVertices), false);
+    createBuffers(&skyboxVAO, &skyboxVBO, skyboxVertices, sizeof(skyboxVertices), false, 3);
 
     unsigned int cubeVAO, cubeVBO;
     createBuffers(&cubeVAO, &cubeVBO, cubeVertices, sizeof(cubeVertices));
+
+    unsigned int reflectVAO, reflectVBO;
+    createBuffers(&reflectVAO, &reflectVBO, cubeWithNormals, sizeof(cubeWithNormals), true, 6);
 
     unsigned int planeVAO, planeVBO;
     createBuffers(&planeVAO, &planeVBO, planeVertices, sizeof(planeVertices));
@@ -110,9 +115,9 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Set uniforms on both shaders
-        shader.use();
         const glm::mat4 view = camera.GetViewMatrix();
         const glm::mat4 projection = glm::perspective(glm::radians(camera.Fov), static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT), 0.1f, 100.0f);
+        shader.use();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
@@ -127,13 +132,25 @@ int main() {
 
         // Cull back faces of cubes since we aren't meant to see them
         glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
 
         // Draw cubes normally
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        drawCube(shader, glm::vec3(-1.0f, 0.0f, -1.0f));
-        drawCube(shader, glm::vec3(2.0f, 0.0f, 0.0f));
+
+        reflectionShader.use();
+        reflectionShader.setVec3("cameraPos", camera.Position);
+        reflectionShader.setMat4("view", view);
+        reflectionShader.setMat4("projection", projection);
+        glBindVertexArray(reflectVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+        drawCube(reflectionShader, glm::vec3(2.0f, 0.0f, 0.0f));
+        refractionShader.use();
+        refractionShader.setVec3("cameraPos", camera.Position);
+        refractionShader.setMat4("view", view);
+        refractionShader.setMat4("projection", projection);
+        drawCube(refractionShader, glm::vec3(-1.0f, 0.0f, -1.0f));
 
         // Draw Skybox
         glDepthFunc(GL_LEQUAL);
